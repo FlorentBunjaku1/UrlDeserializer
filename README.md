@@ -91,3 +91,9 @@ UrlEncoded string used to test UrlDeserializer.
 ```csharp
 "clientId=2&date=2017-01-01&filters={\"clientId\":2,\"date\":\"2017-01-02\",\"filters\":{\"days\":[\"monday\",\"tuesday\",\"wednesday\"],\"months\":[\"january\",\"february\"]}}"
 ```
+
+### Limitations
+1. Doesn't support string which contains '=' or '&' as part of the value (e.g username==name&====)
+
+### TODO
+1. Make decoding more memory efficient, because the built one doesn't support spans.
