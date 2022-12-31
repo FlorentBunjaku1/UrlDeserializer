@@ -11,7 +11,7 @@ namespace DotNetUrlDeserializer.Implementation
         private static readonly JsonSerializerOptions _jsonSerializerOptions = new()
         {
             NumberHandling = JsonNumberHandling.AllowReadingFromString,
-            PropertyNameCaseInsensitive = false
+            PropertyNameCaseInsensitive = true
         };
 
         /// <summary>
