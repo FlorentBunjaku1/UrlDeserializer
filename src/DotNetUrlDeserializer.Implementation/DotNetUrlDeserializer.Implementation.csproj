@@ -2,6 +2,8 @@
 
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <RepositoryUrl>https://github.com/FlorentBunjaku1/UrlDeserializer</RepositoryUrl>
     </PropertyGroup>
 
 </Project>
