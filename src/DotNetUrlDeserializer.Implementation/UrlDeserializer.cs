@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Web;
@@ -47,61 +48,71 @@ namespace DotNetUrlDeserializer.Implementation
             var offset = 0;
             var length = 0;
             var index = 1;
-            for (var i = 0; i < decoded.Length; i++)
+
+            try
             {
-                if (decoded[i] == '=')
+                for (var i = 0; i < decoded.Length; i++)
                 {
-                    if (i == decoded.Length - 1 || decoded[i + 1] == '&')
+                    if (decoded[i] == '=')
                     {
-                        var tempIndex = offset == 0 || jsonSpan[index - 1] != ',' || i != decoded.Length - 1 ? index : index - 1;
-                        jsonSpan[tempIndex..^1].Fill(' ');
+                        if (i == decoded.Length - 1 || decoded[i + 1] == '&')
+                        {
+                            var tempIndex = offset == 0 || jsonSpan[index - 1] != ',' || i != decoded.Length - 1
+                                ? index
+                                : index - 1;
+                            jsonSpan[tempIndex..^1].Fill(' ');
+                        }
+                        else
+                        {
+                            var name = decoded.Slice(offset, length);
+                            jsonSpan[index++] = '\"';
+                            name.CopyTo(jsonSpan[index..]);
+                            index += length;
+                            jsonSpan[index++] = '\"';
+                            jsonSpan[index++] = ':';
+                        }
+
+                        offset = i + 1;
+                        length = 0;
+
+                        continue;
                     }
-                    else
+
+                    if (decoded[i] == '&' && length == 0)
                     {
-                        var name = decoded.Slice(offset, length);
-                        jsonSpan[index++] = '\"';
-                        name.CopyTo(jsonSpan[index..]);
-                        index += length;
-                        jsonSpan[index++] = '\"';
-                        jsonSpan[index++] = ':';
+                        jsonSpan[index] = ' ';
+                        offset = i + 1;
+                        continue;
                     }
 
-                    offset = i + 1;
-                    length = 0;
+                    if (decoded[i] == '&' || i == decoded.Length - 1 && length != 0)
+                    {
+                        var valueLength = i == decoded.Length - 1 ? length + 1 : length;
+                        var value = decoded.Slice(offset, valueLength);
 
-                    continue;
+                        var isBoolean = value.SequenceEqual(_booleans[0]) || value.SequenceEqual(_booleans[1]);
+                        jsonSpan[index] = value[0] != '{' && value[0] != '[' && !isBoolean ? '\"' : ' ';
+                        index++;
+                        value.CopyTo(jsonSpan[index..]);
+                        index += valueLength;
+                        jsonSpan[index] = value[^1] != '}' && value[^1] != ']' && !isBoolean ? '\"' : ' ';
+                        index++;
+                        if (i != decoded.Length - 1) jsonSpan[index++] = ',';
+
+                        offset = i + 1;
+                        length = 0;
+                        continue;
+                    }
+
+                    length++;
                 }
 
-                if (decoded[i] == '&' && length == 0)
-                {
-                    jsonSpan[index] = ' ';
-                    offset = i + 1;
-                    continue;
-                }
-
-                if (decoded[i] == '&' || i == decoded.Length - 1 && length != 0)
-                {
-                    var valueLength = i == decoded.Length - 1 ? length + 1 : length;
-                    var value = decoded.Slice(offset, valueLength);
-
-                    var isBoolean = value.SequenceEqual(_booleans[0]) || value.SequenceEqual(_booleans[1]);
-                    jsonSpan[index] = value[0] != '{' && value[0] != '[' && !isBoolean ? '\"' : ' ';
-                    index++;
-                    value.CopyTo(jsonSpan[index..]);
-                    index += valueLength;
-                    jsonSpan[index] = value[^1] != '}' && value[^1] != ']' && !isBoolean ? '\"' : ' ';
-                    index++;
-                    if (i != decoded.Length - 1) jsonSpan[index++] = ',';
-
-                    offset = i + 1;
-                    length = 0;
-                    continue;
-                }
-
-                length++;
+                return JsonSerializer.Deserialize<TResponse>(jsonSpan, _jsonSerializerOptions);
             }
-
-            return JsonSerializer.Deserialize<TResponse>(jsonSpan, _jsonSerializerOptions);
+            catch (Exception e)
+            {
+                throw new UrlException(jsonSpan.ToString(), e);
+            }
         }
     }
 }
