@@ -5,7 +5,9 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <RepositoryUrl>https://github.com/FlorentBunjaku1/UrlDeserializer</RepositoryUrl>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <Version>1.0.2</Version>
     </PropertyGroup>
 
     <ItemGroup>
